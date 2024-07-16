@@ -1,51 +1,134 @@
 ﻿namespace LiveTextStreamProcessorWebApp.Services
 {
-    using Hangfire;
+    using LiveTextStreamProcessorWebApp.Cache;
     using LiveTextStreamProcessorWebApp.Hubs;
     using LiveTextStreamProcessorWebApp.Models;
     using Microsoft.AspNetCore.SignalR;
+    using Newtonsoft.Json;
+    using System.Text;
     using System.Text.RegularExpressions;
 
     public class StreamProcessingService
     {
         private readonly IHubContext<StreamHub> _hubContext;
         private readonly Booster.CodingTest.Library.WordStream _wordStream;
+        private readonly ILogger<StreamProcessingService> _logger;
 
-        public StreamProcessingService(IHubContext<StreamHub> hubContext)
+        private const int MaxRetryAttempts = 5;
+        private const int DelayBetweenRetriesInSeconds = 5;
+
+        public StreamProcessingService(IHubContext<StreamHub> hubContext, ILogger<StreamProcessingService> logger)
         {
             _wordStream = new Booster.CodingTest.Library.WordStream(); // Initialize WordStream
             _hubContext = hubContext;
+            _logger = logger;
         }
 
         public async Task StartProcessing()
         {
+            int retryAttempts = 0;
+
             while (true)
             {
-                // Read data from stream
-                var data = await ReadFromStream();
+                try
+                {
+                    // Read data from stream
+                    var data = await ReadFromStream();
 
-                // Process data
-                var processedData = ProcessData(data);
+                    // Process data
+                    var processedData = ProcessData(data);
 
-                await _hubContext.Clients.All.SendAsync("ReceiveStreamData", processedData); // Use _hubContext instead of Clients directly
+                    // Use _hubContext to push results
+                    await _hubContext.Clients.All.SendAsync("ReceiveStreamData", processedData);
 
-                // Delay for 5 seconds
-                await Task.Delay(TimeSpan.FromSeconds(5));
+                    _logger.LogInformation($"Send Data to client : {JsonConvert.SerializeObject(processedData)}");
+
+                    // Access the singleton instance and Set cached data
+                    InMemoryCacheService.Instance.SetCachedData(processedData);
+
+                    // Reset retry attempts on successful read
+                    retryAttempts = 0;
+
+                    // Delay for 5 seconds
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error occurred while processing the stream.");
+
+                    // Increment retry attempts and check if max attempts are reached
+                    retryAttempts++;
+                    if (retryAttempts >= MaxRetryAttempts)
+                    {
+                        _logger.LogError("Max retry attempts reached. Stopping processing.");
+                        break;
+                    }
+
+                    // Delay before retrying
+                    await Task.Delay(TimeSpan.FromSeconds(DelayBetweenRetriesInSeconds));
+                }
             }
         }
 
         private async Task<string> ReadFromStream()
         {
-            // Example of how to read asynchronously from the stream
-            var buffer = new byte[1024]; // Example buffer size
-            var bytesRead = await _wordStream.ReadAsync(buffer, 0, buffer.Length);
-            var data = System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead);
-            return data;
+            try
+            {
+                var buffer = new byte[1024];
+                int bytesRead = await _wordStream.ReadAsync(buffer, 0, buffer.Length);
+                return Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error reading from stream");
+                throw;
+            }
         }
 
         private StreamDataModel ProcessData(string data)
         {
-            // Example logic to process stream data
+            var wordList = Regex.Split(data, @"\W+")
+                                .Where(w => !string.IsNullOrWhiteSpace(w))
+                                .ToList();
+
+            var totalCharacters = data.Length;
+            var totalWords = wordList.Count;
+
+            var wordGroups = wordList.GroupBy(w => w.Length)
+                                     .ToDictionary(g => g.Key, g => g.ToList());
+
+            var largestWords = wordGroups.OrderByDescending(g => g.Key)
+                                         .SelectMany(g => g.Value.Distinct())
+                                         .Take(5)
+                                         .ToList();
+
+            var smallestWords = wordGroups.OrderBy(g => g.Key)
+                                          .SelectMany(g => g.Value.Distinct())
+                                          .Take(5)
+                                          .ToList();
+
+            var mostFrequentWords = wordList.GroupBy(w => w)
+                                            .OrderByDescending(g => g.Count())
+                                            .Take(10)
+                                            .ToDictionary(g => g.Key, g => g.Count());
+
+            var charFrequencies = data.GroupBy(c => c)
+                                      .ToDictionary(g => g.Key, g => g.Count());
+
+            return new StreamDataModel
+            {
+                TotalCharacters = totalCharacters,
+                TotalWords = totalWords,
+                LargestWordsWithCounts = largestWords.ToDictionary(w => w, w => w.Length),
+                SmallestWordsWithCounts = smallestWords.ToDictionary(w => w, w => w.Length),
+                MostFrequentWords = mostFrequentWords,
+                CharacterFrequencies = charFrequencies,
+                LiveData = data
+            };
+        }
+
+        private StreamDataModel ProcessDatav1(string data)
+        {
             var model = new StreamDataModel
             {
                 TotalCharacters = data.Length,
@@ -62,7 +145,6 @@
 
         private int CountWords(string data)
         {
-            // Example method to count words in the data
             if (string.IsNullOrWhiteSpace(data))
                 return 0;
 
@@ -97,7 +179,6 @@
                                           .Take(count)
                                           .ToDictionary(pair => $"{pair.Key}", pair => pair.Key.Length);
 
-
             return smallestWords;
         }
 
@@ -110,7 +191,7 @@
             {
                 if (!string.IsNullOrWhiteSpace(word))
                 {
-                    var trimmedWord = word.Trim(); // Trim any leading or trailing whitespace
+                    var trimmedWord = word.Trim();
                     if (wordCounts.ContainsKey(trimmedWord))
                     {
                         wordCounts[trimmedWord]++;
@@ -122,7 +203,6 @@
                 }
             }
 
-            // Order by ascending length and then alphabetically by word
             var smallestWords = wordCounts.OrderBy(pair => pair.Key.Length)
                                           .ThenBy(pair => pair.Key)
                                           .Take(count)
@@ -152,7 +232,6 @@
                 }
             }
 
-            // Order by descending frequency and take the top 'count'
             var mostFrequent = wordCounts.OrderByDescending(pair => pair.Value)
                                          .Take(count)
                                          .ToDictionary(pair => pair.Key, pair => pair.Value);
@@ -162,7 +241,6 @@
 
         private Dictionary<char, int> GetCharacterFrequencies(string data)
         {
-            // Example method to get character frequencies
             var charFreq = new Dictionary<char, int>();
 
             foreach (char c in data)

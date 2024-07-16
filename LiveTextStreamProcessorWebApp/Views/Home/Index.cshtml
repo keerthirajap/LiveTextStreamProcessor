@@ -8,13 +8,19 @@
         </div>
         <div class="col-2">
             <h2 class="mb-2 text-right"><span id="userCount"></span></h2>
+            <div class="mb-2 text-right">
+                <span id="connectionStatus"></span>
+            </div>
         </div>
     </div>
 
     <div class="container my-0">
         <div class="p-1 text-center bg-body-tertiary rounded-3">
-            <h3 class="">Total Characters: <span id="totalCharacters" class="display-6"></span></h3>
-            <h3 class="">Total Words: <span id="totalWords" class="display-6"></span></h3>
+            <h3 class="">Total Characters: <span id="totalCharacters" class="display-6">Loading...</span></h3>
+            <h3 class="">Total Words: <span id="totalWords" class="display-6">Loading...</span></h3>
+        </div>
+        <div class="row mb-3 mt-2 text-end">
+            <span id="cachedOn"></span>
         </div>
     </div>
 
@@ -27,7 +33,7 @@
                             <h4 class="my-0 fw-normal">5 Largest Words</h4>
                         </div>
                         <div class="card-body text-start">
-                            <span id="largestWords" class="list-unstyled"></span></p>
+                            <span id="largestWords" class="list-unstyled">Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -38,7 +44,7 @@
                             <h4 class="my-0 fw-normal">5 Smallest Words</h4>
                         </div>
                         <div class="card-body text-start">
-                            <span id="smallestWords" class="list-unstyled"></span></p>
+                            <span id="smallestWords" class="list-unstyled">Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -49,7 +55,7 @@
                             <h4 class="my-0 fw-normal">10 Most Frequent Words</h4>
                         </div>
                         <div class="card-body text-start">
-                            <span id="mostFrequentWords" class="list-unstyled"></span></p>
+                            <span id="mostFrequentWords" class="list-unstyled">Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -60,7 +66,7 @@
                             <h4 class="my-0 fw-normal">All Character Frequencies</h4>
                         </div>
                         <div class="card-body text-start">
-                            <span id="charFrequencies" class="list-unstyled"></span></p>
+                            <span id="charFrequencies" class="list-unstyled">Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -75,7 +81,7 @@
                             <h4 class="my-0 fw-normal">Streamed Data</h4>
                         </div>
                         <div class="card-body text-start">
-                            <p id="streamedData" class=""></p>
+                            <p id="streamedData" class="">Loading...</p>
                         </div>
                     </div>
                 </div>
@@ -100,8 +106,12 @@
         try {
             await connection.start();
             console.log("SignalR Connected.");
+            document.getElementById("connectionStatus").style.color = "#27ae60";
+            document.getElementById("connectionStatus").innerText = "Server Connected";
         } catch (err) {
             console.error("SignalR Connection Error: ", err.toString());
+            document.getElementById("connectionStatus").style.color = "#c0392b";
+            document.getElementById("connectionStatus").innerText = "Server Disconnected";
             setTimeout(startConnection, 5000); // Retry connection after 5 seconds
         }
     }
@@ -119,6 +129,7 @@
         document.getElementById("totalCharacters").innerText = data.totalCharacters;
         document.getElementById("totalWords").innerText = data.totalWords;
         document.getElementById("streamedData").innerText = data.liveData;
+        document.getElementById("cachedOn").innerText = "Streamed On : " + data.cacheOn;
 
         // Update Largest Words
         const largestWordsList = document.getElementById("largestWords");

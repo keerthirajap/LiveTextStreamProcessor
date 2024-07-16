@@ -9,17 +9,13 @@
     {
         private readonly ILogger<HomeController> _logger;
 
-        private readonly StreamHub _streamHub;
-
-        public HomeController(ILogger<HomeController> logger, StreamHub streamHub)
+        public HomeController(ILogger<HomeController> logger)
         {
-            _logger = logger;
-            _streamHub = streamHub;
+            this._logger = logger;
         }
 
         public IActionResult Index()
         {
-
             return View();
         }
 

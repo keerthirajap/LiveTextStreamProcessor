@@ -1,64 +1,77 @@
 namespace LiveTextStreamProcessorWebApp
 {
-    using Hangfire;
-    using Hangfire.MemoryStorage;
+    using LiveTextStreamProcessorWebApp.ActionFilter;
+    using LiveTextStreamProcessorWebApp.Cache;
     using LiveTextStreamProcessorWebApp.Hubs;
     using LiveTextStreamProcessorWebApp.Services;
+    using NLog;
+    using NLog.Web;
 
     public class Program
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            // Configure NLog
+            var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
 
-            // Add services to the container.
-            builder.Services.AddControllersWithViews();
-            builder.Services.AddSignalR();
-            //builder.Services.AddHangfire(config => config.UseMemoryStorage());
-            builder.Services.AddSingleton<StreamHub>();
-            builder.Services.AddSingleton<StreamProcessingService>();
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment())
+            try
             {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
+                var builder = WebApplication.CreateBuilder(args);
+
+                // Add services to the container.
+                builder.Services.AddControllersWithViews(options =>
+                {
+                    options.Filters.Add(typeof(LogPageRequestAttribute)); // Add globally
+                    options.Filters.Add(typeof(LogExceptionAttribute)); // Add globally
+                });
+
+                builder.Services.AddSignalR();
+                builder.Services.AddSingleton<StreamHub>();
+                builder.Services.AddSingleton<StreamProcessingService>();
+
+                builder.Host.UseNLog();
+
+                var app = builder.Build();
+
+                // Configure the HTTP request pipeline.
+                if (!app.Environment.IsDevelopment())
+                {
+                    app.UseExceptionHandler("/Home/Error");
+                    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                    app.UseHsts();
+                }
+
+                app.UseHttpsRedirection();
+                app.UseStaticFiles();
+
+                app.UseRouting();
+
+                app.UseAuthorization();
+
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapControllerRoute(
+                        name: "default",
+                        pattern: "{controller=Home}/{action=Index}/{id?}");
+
+                    endpoints.MapHub<StreamHub>("/streamHub");
+                });
+
+                // Start the stream processing service
+                var streamProcessingService = app.Services.GetRequiredService<StreamProcessingService>();
+                streamProcessingService.StartProcessing();
+
+                app.Run();
             }
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            //app.UseHangfireDashboard();
-            //app.UseHangfireServer();
-
-            // Resolve the StreamProcessingService instance
-            //var serviceProvider = app.Services;
-            //var streamProcessingService = serviceProvider.GetRequiredService<StreamProcessingService>();
-
-            //// Schedule the recurring job to run immediately at startup and then every 5 seconds
-            //RecurringJob.AddOrUpdate(() => streamProcessingService.ProcessStream(), Cron.Minutely);
-
-            app.UseEndpoints(endpoints =>
+            catch (Exception ex)
             {
-                endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
-
-                endpoints.MapHub<StreamHub>("/streamHub"); // Make sure this path matches the URL used in JavaScript
-            });
-
-            var streamProcessingService = app.Services.GetRequiredService<StreamProcessingService>();
-            streamProcessingService.StartProcessing(); // Start the stream processing service
-
-
-            app.Run();
+                logger.Error(ex, "Stopped program because of exception");
+                throw;
+            }
+            finally
+            {
+                LogManager.Shutdown();
+            }
         }
     }
 }
