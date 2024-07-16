@@ -50,11 +50,11 @@
             {
                 TotalCharacters = data.Length,
                 TotalWords = data.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length,
-                LargestWords = GetLargestWords(data, 5),
+                LargestWordsWithCounts = GetLargestWords(data, 5),
                 SmallestWordsWithCounts = GetSmallestWordsWithCounts(data, 5),
                 MostFrequentWords = GetMostFrequentWords(data, 10),
                 CharacterFrequencies = GetCharacterFrequencies(data),
-                //LiveUserCount = new Random().Next(1, 100) // Example random live user count
+                LiveData = data,
             };
 
             return model;
@@ -70,19 +70,34 @@
             return words.Count();
         }
 
-        private List<string> GetLargestWords(string data, int count)
+        private Dictionary<string, int> GetLargestWords(string data, int count)
         {
-            // Example method to get largest words
-            if (string.IsNullOrWhiteSpace(data))
-                return new List<string>();
+            var words = Regex.Split(data, @"\W+");
+            var wordCounts = new Dictionary<string, int>();
 
-            var words = Regex.Split(data, @"\W+")
-                            .Where(word => !string.IsNullOrEmpty(word)) // Exclude empty entries
-                            .OrderByDescending(w => w.Length)
-                            .Take(count)
-                            .ToList();
+            foreach (var word in words)
+            {
+                if (!string.IsNullOrWhiteSpace(word))
+                {
+                    var trimmedWord = word.Trim(); // Trim any leading or trailing whitespace
+                    if (wordCounts.ContainsKey(trimmedWord))
+                    {
+                        wordCounts[trimmedWord]++;
+                    }
+                    else
+                    {
+                        wordCounts[trimmedWord] = 1;
+                    }
+                }
+            }
 
-            return words;
+            // Order by ascending length and then alphabetically by word
+            var smallestWords = wordCounts.OrderByDescending(pair => pair.Key.Length)
+                                          .ThenBy(pair => pair.Key)
+                                          .Take(count)
+                                          .ToDictionary(pair => $"{pair.Key} ({pair.Key.Length})", pair => pair.Value);
+
+            return smallestWords;
         }
 
         private Dictionary<string, int> GetSmallestWordsWithCounts(string data, int count)

@@ -3,15 +3,90 @@
 }
 
 <div>
-    <h1><span id="userCount"></span></h1>
-    <p>Total Characters: <span id="totalCharacters"></span></p>
-    <p>Total Words: <span id="totalWords"></span></p>
-    <p>Largest Words: <span id="largestWords"></span></p>
-    <p>Smallest Words: <span id="smallestWords"></span></p>
-    <p>Most Frequent Words: <span id="mostFrequentWords"></span></p>
-    <p>Character Frequencies:</p>
-    <ul id="charFrequencies">
-    </ul>
+    <div class="row">
+        <div class="col-10">
+        </div>
+        <div class="col-2">
+            <h2 class="mb-2 text-right"><span id="userCount"></span></h2>
+        </div>
+    </div>
+
+    <div class="container my-0">
+        <div class="p-1 text-center bg-body-tertiary rounded-3">
+            <h3 class="">Total Characters: <span id="totalCharacters" class="display-6"></span></h3>
+            <h3 class="">Total Words: <span id="totalWords" class="display-6"></span></h3>
+        </div>
+    </div>
+
+    <div class="row mb-3 mt-2 text-center">
+        <div class="col-12 col-lg-6">
+            <div class="row">
+                <div class="col-6 col-lg-6">
+                    <div class="card mb-4 rounded-3 shadow-sm">
+                        <div class="card-header py-3">
+                            <h4 class="my-0 fw-normal">5 Largest Words</h4>
+                        </div>
+                        <div class="card-body text-start">
+                            <span id="largestWords" class="list-unstyled"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-6">
+                    <div class="card mb-4 rounded-3 shadow-sm">
+                        <div class="card-header py-3">
+                            <h4 class="my-0 fw-normal">5 Smallest Words</h4>
+                        </div>
+                        <div class="card-body text-start">
+                            <span id="smallestWords" class="list-unstyled"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-6">
+                    <div class="card mb-4 rounded-3 shadow-sm">
+                        <div class="card-header py-3">
+                            <h4 class="my-0 fw-normal">10 Most Frequent Words</h4>
+                        </div>
+                        <div class="card-body text-start">
+                            <span id="mostFrequentWords" class="list-unstyled"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-6">
+                    <div class="card mb-4 rounded-3 shadow-sm">
+                        <div class="card-header py-3">
+                            <h4 class="my-0 fw-normal">All Character Frequencies</h4>
+                        </div>
+                        <div class="card-body text-start">
+                            <span id="charFrequencies" class="list-unstyled"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card mb-4 rounded-3 shadow-sm">
+                        <div class="card-header py-3">
+                            <h4 class="my-0 fw-normal">Streamed Data</h4>
+                        </div>
+                        <div class="card-body text-start">
+                            <p id="streamedData" class=""></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12">
+    </div>
 </div>
 
 
@@ -34,13 +109,19 @@
     });
 
 
-    connection.on("ReceiveStreamData", function (data) {
-        // Update UI with received data
+    connection.on("ReceiveStreamData", function (data) {        
         console.log(data);
         $('#liveUserCount').text(data.liveUserCount);
         $('#totalCharacters').text(data.totalCharacters);
         $('#totalWords').text(data.totalWords);
-        $('#largestWords').text(data.largestWords.join(", "));
+        $('#streamedData').text(data.liveData);
+
+        var largestWordsList = [];
+        for (var word in data.largestWordsWithCounts) {
+            largestWordsList.push(word);
+        }
+
+        $('#largestWords').html("<li>" + largestWordsList.join("</li><li>") + "</li>");
 
         var smallestWordsList = [];
         for (var word in data.smallestWordsWithCounts) {
@@ -55,11 +136,15 @@
         }
         $('#mostFrequentWords').html("<li>" + mostFrequentList.join("</li><li>") + "</li>");
 
-        // Clear and then populate character frequencies list
+
         var charFreqList = $('#charFrequencies');
         charFreqList.empty();
-        $.each(data.characterFrequencies, function (key, value) {
-            charFreqList.append('<li>' + key + ': ' + value + '</li>');
-        });
+
+        var charFrequentList = [];
+        for (var word in data.characterFrequencies) {
+            charFrequentList.push(word + " (" + data.characterFrequencies[word] + ")");
+        }
+        $('#charFrequencies').html("<li>" + charFrequentList.join("</li><li>") + "</li>");
+
     });
 </script>
