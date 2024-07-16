@@ -44,12 +44,5 @@
             Clients.All.SendAsync("UpdateUserCount", _userCount);
             return base.OnDisconnectedAsync(exception);
         }
-
-        public async Task SendStreamData(StreamDataModel data)
-        {
-            _logger.LogInformation($"SendStreamData : {JsonConvert.SerializeObject(data)}");
-
-            await Clients.All.SendAsync("ReceiveStreamData", data);
-        }
     }
 }

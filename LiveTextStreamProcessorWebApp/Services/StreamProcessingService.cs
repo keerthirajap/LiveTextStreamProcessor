@@ -112,8 +112,9 @@
                                             .Take(10)
                                             .ToDictionary(g => g.Key, g => g.Count());
 
-            var charFrequencies = data.GroupBy(c => c)
-                                      .ToDictionary(g => g.Key, g => g.Count());
+            var charFrequencies = data.Where(c => !char.IsWhiteSpace(c))
+                           .GroupBy(c => c)
+                           .ToDictionary(g => g.Key, g => g.Count());
 
             return new StreamDataModel
             {
