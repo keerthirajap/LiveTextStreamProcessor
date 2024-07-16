@@ -89,7 +89,6 @@
     </div>
 </div>
 
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
 <script>
     const connection = new signalR.HubConnectionBuilder()
@@ -97,54 +96,54 @@
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
-    connection.start().then(function () {
-        console.log("SignalR Connected.");
-    }).catch(function (err) {
-        return console.error(err.toString());
-    });
+    async function startConnection() {
+        try {
+            await connection.start();
+            console.log("SignalR Connected.");
+        } catch (err) {
+            console.error("SignalR Connection Error: ", err.toString());
+            setTimeout(startConnection, 5000); // Retry connection after 5 seconds
+        }
+    }
 
+    connection.onclose(async () => {
+        await startConnection();
+    });
 
     connection.on("UpdateUserCount", function (count) {
         document.getElementById("userCount").innerText = "Live users: " + count;
     });
 
+    connection.on("ReceiveStreamData", function (data) {
+        console.log(data);        
+        document.getElementById("totalCharacters").innerText = data.totalCharacters;
+        document.getElementById("totalWords").innerText = data.totalWords;
+        document.getElementById("streamedData").innerText = data.liveData;
 
-    connection.on("ReceiveStreamData", function (data) {        
-        console.log(data);
-        $('#liveUserCount').text(data.liveUserCount);
-        $('#totalCharacters').text(data.totalCharacters);
-        $('#totalWords').text(data.totalWords);
-        $('#streamedData').text(data.liveData);
+        // Update Largest Words
+        const largestWordsList = document.getElementById("largestWords");
+        largestWordsList.innerHTML = Object.entries(data.largestWordsWithCounts)
+            .map(([word, count]) => `<li>${word} (${count})</li>`)
+            .join("");
 
-        var largestWordsList = [];
-        for (var word in data.largestWordsWithCounts) {
-            largestWordsList.push(word);
-        }
+        // Update Smallest Words
+        const smallestWordsList = document.getElementById("smallestWords");
+        smallestWordsList.innerHTML = Object.entries(data.smallestWordsWithCounts)
+            .map(([word, count]) => `<li>${word} (${count})</li>`)
+            .join("");
 
-        $('#largestWords').html("<li>" + largestWordsList.join("</li><li>") + "</li>");
+        // Update Most Frequent Words
+        const mostFrequentWordsList = document.getElementById("mostFrequentWords");
+        mostFrequentWordsList.innerHTML = Object.entries(data.mostFrequentWords)
+            .map(([word, count]) => `<li>${word} (${count})</li>`)
+            .join("");
 
-        var smallestWordsList = [];
-        for (var word in data.smallestWordsWithCounts) {
-            smallestWordsList.push(word);
-        }
-
-        $('#smallestWords').html("<li>" + smallestWordsList.join("</li><li>") + "</li>");
-
-        var mostFrequentList = [];
-        for (var word in data.mostFrequentWords) {
-            mostFrequentList.push(word + " (" + data.mostFrequentWords[word] + ")");
-        }
-        $('#mostFrequentWords').html("<li>" + mostFrequentList.join("</li><li>") + "</li>");
-
-
-        var charFreqList = $('#charFrequencies');
-        charFreqList.empty();
-
-        var charFrequentList = [];
-        for (var word in data.characterFrequencies) {
-            charFrequentList.push(word + " (" + data.characterFrequencies[word] + ")");
-        }
-        $('#charFrequencies').html("<li>" + charFrequentList.join("</li><li>") + "</li>");
-
+        // Update Character Frequencies
+        const charFrequenciesList = document.getElementById("charFrequencies");
+        charFrequenciesList.innerHTML = Object.entries(data.characterFrequencies)
+            .map(([char, count]) => `<li>${char} (${count})</li>`)
+            .join("");
     });
+
+    startConnection();
 </script>

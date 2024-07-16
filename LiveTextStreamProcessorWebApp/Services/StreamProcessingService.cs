@@ -95,7 +95,8 @@
             var smallestWords = wordCounts.OrderByDescending(pair => pair.Key.Length)
                                           .ThenBy(pair => pair.Key)
                                           .Take(count)
-                                          .ToDictionary(pair => $"{pair.Key} ({pair.Key.Length})", pair => pair.Value);
+                                          .ToDictionary(pair => $"{pair.Key}", pair => pair.Key.Length);
+
 
             return smallestWords;
         }
@@ -125,7 +126,7 @@
             var smallestWords = wordCounts.OrderBy(pair => pair.Key.Length)
                                           .ThenBy(pair => pair.Key)
                                           .Take(count)
-                                          .ToDictionary(pair => $"{pair.Key} ({pair.Key.Length})", pair => pair.Value);
+                                          .ToDictionary(pair => $"{pair.Key}", pair => pair.Key.Length);
 
             return smallestWords;
         }
