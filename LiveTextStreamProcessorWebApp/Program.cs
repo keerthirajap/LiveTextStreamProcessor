@@ -1,5 +1,7 @@
 namespace LiveTextStreamProcessorWebApp
 {
+    using LiveTextStreamProcessorService.Concrete;
+    using LiveTextStreamProcessorService.Interface;
     using LiveTextStreamProcessorWebApp.ActionFilter;
     using LiveTextStreamProcessorWebApp.Cache;
     using LiveTextStreamProcessorWebApp.Hubs;
@@ -27,6 +29,7 @@ namespace LiveTextStreamProcessorWebApp
 
                 builder.Services.AddSignalR();
                 builder.Services.AddSingleton<StreamHub>();
+                builder.Services.AddSingleton<IWordStreamReaderService, WordStreamReaderService>();
                 builder.Services.AddSingleton<StreamProcessingService>();
 
                 builder.Host.UseNLog();

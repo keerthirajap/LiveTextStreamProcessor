@@ -18,6 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\LiveTextStreamProcessorService\LiveTextStreamProcessorService.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Booster.CodingTest.Library">
       <HintPath>Libraries\Booster.CodingTest.Library.dll</HintPath>
     </Reference>

@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{B2AB7831-C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiveTextStreamProcessorWebAppTest", "Test\LiveTextStreamProcessorWebAppTest\LiveTextStreamProcessorWebAppTest.csproj", "{9BB3F2A3-C7A1-46A0-B64E-BE2101431E5F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiveTextStreamProcessorService", "LiveTextStreamProcessorService\LiveTextStreamProcessorService.csproj", "{9C91AF36-79C9-4361-AC16-619E7ABAAC58}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,10 @@ Global
 		{9BB3F2A3-C7A1-46A0-B64E-BE2101431E5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BB3F2A3-C7A1-46A0-B64E-BE2101431E5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BB3F2A3-C7A1-46A0-B64E-BE2101431E5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C91AF36-79C9-4361-AC16-619E7ABAAC58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C91AF36-79C9-4361-AC16-619E7ABAAC58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C91AF36-79C9-4361-AC16-619E7ABAAC58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C91AF36-79C9-4361-AC16-619E7ABAAC58}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

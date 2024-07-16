@@ -1,5 +1,6 @@
 ﻿namespace LiveTextStreamProcessorWebApp.Services
 {
+    using LiveTextStreamProcessorService.Interface;
     using LiveTextStreamProcessorWebApp.Cache;
     using LiveTextStreamProcessorWebApp.Hubs;
     using LiveTextStreamProcessorWebApp.Models;
@@ -13,18 +14,20 @@
         private readonly IHubContext<StreamHub> _hubContext;
         private readonly Booster.CodingTest.Library.WordStream _wordStream;
         private readonly ILogger<StreamProcessingService> _logger;
+        private readonly IWordStreamReaderService _wordStreamReaderService;
 
         private const int MaxRetryAttempts = 5;
         private const int DelayBetweenRetriesInSeconds = 5;
 
-        public StreamProcessingService(IHubContext<StreamHub> hubContext, ILogger<StreamProcessingService> logger)
+        public StreamProcessingService(IHubContext<StreamHub> hubContext, ILogger<StreamProcessingService> logger, IWordStreamReaderService wordStreamReaderService)
         {
             _wordStream = new Booster.CodingTest.Library.WordStream(); // Initialize WordStream
             _hubContext = hubContext;
             _logger = logger;
+            _wordStreamReaderService = wordStreamReaderService;
         }
 
-        public async Task StartProcessing()
+        public async Task StartProcessing(bool calContinueLoop = true)
         {
             int retryAttempts = 0;
 
@@ -51,6 +54,11 @@
 
                     // Delay for 5 seconds
                     await Task.Delay(TimeSpan.FromSeconds(5));
+
+                    if (!calContinueLoop)
+                    {
+                        break;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -70,12 +78,12 @@
             }
         }
 
-        private async Task<string> ReadFromStream()
+        public async Task<string> ReadFromStream()
         {
             try
             {
                 var buffer = new byte[1024];
-                int bytesRead = await _wordStream.ReadAsync(buffer, 0, buffer.Length);
+                int bytesRead = await _wordStreamReaderService.ReadAsync(buffer, 0, buffer.Length);
                 return Encoding.UTF8.GetString(buffer, 0, bytesRead);
             }
             catch (Exception ex)
@@ -85,7 +93,7 @@
             }
         }
 
-        private StreamDataModel ProcessData(string data)
+        public StreamDataModel ProcessData(string data)
         {
             var wordList = Regex.Split(data, @"\W+")
                                 .Where(w => !string.IsNullOrWhiteSpace(w))
@@ -126,140 +134,6 @@
                 CharacterFrequencies = charFrequencies,
                 LiveData = data
             };
-        }
-
-        private StreamDataModel ProcessDatav1(string data)
-        {
-            var model = new StreamDataModel
-            {
-                TotalCharacters = data.Length,
-                TotalWords = data.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length,
-                LargestWordsWithCounts = GetLargestWords(data, 5),
-                SmallestWordsWithCounts = GetSmallestWordsWithCounts(data, 5),
-                MostFrequentWords = GetMostFrequentWords(data, 10),
-                CharacterFrequencies = GetCharacterFrequencies(data),
-                LiveData = data,
-            };
-
-            return model;
-        }
-
-        private int CountWords(string data)
-        {
-            if (string.IsNullOrWhiteSpace(data))
-                return 0;
-
-            var words = Regex.Split(data, @"\W+").Where(word => !string.IsNullOrEmpty(word)); // Exclude empty entries
-            return words.Count();
-        }
-
-        private Dictionary<string, int> GetLargestWords(string data, int count)
-        {
-            var words = Regex.Split(data, @"\W+");
-            var wordCounts = new Dictionary<string, int>();
-
-            foreach (var word in words)
-            {
-                if (!string.IsNullOrWhiteSpace(word))
-                {
-                    var trimmedWord = word.Trim(); // Trim any leading or trailing whitespace
-                    if (wordCounts.ContainsKey(trimmedWord))
-                    {
-                        wordCounts[trimmedWord]++;
-                    }
-                    else
-                    {
-                        wordCounts[trimmedWord] = 1;
-                    }
-                }
-            }
-
-            // Order by ascending length and then alphabetically by word
-            var smallestWords = wordCounts.OrderByDescending(pair => pair.Key.Length)
-                                          .ThenBy(pair => pair.Key)
-                                          .Take(count)
-                                          .ToDictionary(pair => $"{pair.Key}", pair => pair.Key.Length);
-
-            return smallestWords;
-        }
-
-        private Dictionary<string, int> GetSmallestWordsWithCounts(string data, int count)
-        {
-            var words = Regex.Split(data, @"\W+");
-            var wordCounts = new Dictionary<string, int>();
-
-            foreach (var word in words)
-            {
-                if (!string.IsNullOrWhiteSpace(word))
-                {
-                    var trimmedWord = word.Trim();
-                    if (wordCounts.ContainsKey(trimmedWord))
-                    {
-                        wordCounts[trimmedWord]++;
-                    }
-                    else
-                    {
-                        wordCounts[trimmedWord] = 1;
-                    }
-                }
-            }
-
-            var smallestWords = wordCounts.OrderBy(pair => pair.Key.Length)
-                                          .ThenBy(pair => pair.Key)
-                                          .Take(count)
-                                          .ToDictionary(pair => $"{pair.Key}", pair => pair.Key.Length);
-
-            return smallestWords;
-        }
-
-        private Dictionary<string, int> GetMostFrequentWords(string data, int count)
-        {
-            // Example logic to get most frequent words
-            var words = Regex.Split(data, @"\W+");
-            var wordCounts = new Dictionary<string, int>();
-
-            foreach (var word in words)
-            {
-                if (!string.IsNullOrWhiteSpace(word))
-                {
-                    if (wordCounts.ContainsKey(word))
-                    {
-                        wordCounts[word]++;
-                    }
-                    else
-                    {
-                        wordCounts[word] = 1;
-                    }
-                }
-            }
-
-            var mostFrequent = wordCounts.OrderByDescending(pair => pair.Value)
-                                         .Take(count)
-                                         .ToDictionary(pair => pair.Key, pair => pair.Value);
-
-            return mostFrequent;
-        }
-
-        private Dictionary<char, int> GetCharacterFrequencies(string data)
-        {
-            var charFreq = new Dictionary<char, int>();
-
-            foreach (char c in data)
-            {
-                if (char.IsLetterOrDigit(c)) // Count letters and digits only
-                {
-                    if (charFreq.ContainsKey(c))
-                        charFreq[c]++;
-                    else
-                        charFreq[c] = 1;
-                }
-            }
-
-            // Sort dictionary by frequency descending
-            charFreq = charFreq.OrderByDescending(x => x.Value)
-                               .ToDictionary(pair => pair.Key, pair => pair.Value);
-
-            return charFreq;
         }
     }
 }
