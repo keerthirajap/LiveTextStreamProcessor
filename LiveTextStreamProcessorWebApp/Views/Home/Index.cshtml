@@ -1,8 +1,65 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "SignalR Stream Processor";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div>
+    <h1><span id="userCount"></span></h1>
+    <p>Total Characters: <span id="totalCharacters"></span></p>
+    <p>Total Words: <span id="totalWords"></span></p>
+    <p>Largest Words: <span id="largestWords"></span></p>
+    <p>Smallest Words: <span id="smallestWords"></span></p>
+    <p>Most Frequent Words: <span id="mostFrequentWords"></span></p>
+    <p>Character Frequencies:</p>
+    <ul id="charFrequencies">
+    </ul>
 </div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+<script>
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/streamHub")
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+    connection.start().then(function () {
+        console.log("SignalR Connected.");
+    }).catch(function (err) {
+        return console.error(err.toString());
+    });
+
+
+    connection.on("UpdateUserCount", function (count) {
+        document.getElementById("userCount").innerText = "Live users: " + count;
+    });
+
+
+    connection.on("ReceiveStreamData", function (data) {
+        // Update UI with received data
+        console.log(data);
+        $('#liveUserCount').text(data.liveUserCount);
+        $('#totalCharacters').text(data.totalCharacters);
+        $('#totalWords').text(data.totalWords);
+        $('#largestWords').text(data.largestWords.join(", "));
+
+        var smallestWordsList = [];
+        for (var word in data.smallestWordsWithCounts) {
+            smallestWordsList.push(word);
+        }
+
+        $('#smallestWords').html("<li>" + smallestWordsList.join("</li><li>") + "</li>");
+
+        var mostFrequentList = [];
+        for (var word in data.mostFrequentWords) {
+            mostFrequentList.push(word + " (" + data.mostFrequentWords[word] + ")");
+        }
+        $('#mostFrequentWords').html("<li>" + mostFrequentList.join("</li><li>") + "</li>");
+
+        // Clear and then populate character frequencies list
+        var charFreqList = $('#charFrequencies');
+        charFreqList.empty();
+        $.each(data.characterFrequencies, function (key, value) {
+            charFreqList.append('<li>' + key + ': ' + value + '</li>');
+        });
+    });
+</script>

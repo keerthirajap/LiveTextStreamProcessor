@@ -1,5 +1,10 @@
 namespace LiveTextStreamProcessorWebApp
 {
+    using Hangfire;
+    using Hangfire.MemoryStorage;
+    using LiveTextStreamProcessorWebApp.Hubs;
+    using LiveTextStreamProcessorWebApp.Services;
+
     public class Program
     {
         public static void Main(string[] args)
@@ -8,6 +13,10 @@ namespace LiveTextStreamProcessorWebApp
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddSignalR();
+            //builder.Services.AddHangfire(config => config.UseMemoryStorage());
+            builder.Services.AddSingleton<StreamHub>();
+            builder.Services.AddSingleton<StreamProcessingService>();
 
             var app = builder.Build();
 
@@ -26,9 +35,28 @@ namespace LiveTextStreamProcessorWebApp
 
             app.UseAuthorization();
 
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+            //app.UseHangfireDashboard();
+            //app.UseHangfireServer();
+
+            // Resolve the StreamProcessingService instance
+            //var serviceProvider = app.Services;
+            //var streamProcessingService = serviceProvider.GetRequiredService<StreamProcessingService>();
+
+            //// Schedule the recurring job to run immediately at startup and then every 5 seconds
+            //RecurringJob.AddOrUpdate(() => streamProcessingService.ProcessStream(), Cron.Minutely);
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+                endpoints.MapHub<StreamHub>("/streamHub"); // Make sure this path matches the URL used in JavaScript
+            });
+
+            var streamProcessingService = app.Services.GetRequiredService<StreamProcessingService>();
+            streamProcessingService.StartProcessing(); // Start the stream processing service
+
 
             app.Run();
         }

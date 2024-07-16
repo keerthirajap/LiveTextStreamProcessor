@@ -1,5 +1,6 @@
 ﻿namespace LiveTextStreamProcessorWebApp.Controllers
 {
+    using LiveTextStreamProcessorWebApp.Hubs;
     using LiveTextStreamProcessorWebApp.Models;
     using Microsoft.AspNetCore.Mvc;
     using System.Diagnostics;
@@ -8,13 +9,17 @@
     {
         private readonly ILogger<HomeController> _logger;
 
-        public HomeController(ILogger<HomeController> logger)
+        private readonly StreamHub _streamHub;
+
+        public HomeController(ILogger<HomeController> logger, StreamHub streamHub)
         {
             _logger = logger;
+            _streamHub = streamHub;
         }
 
         public IActionResult Index()
         {
+
             return View();
         }
 
