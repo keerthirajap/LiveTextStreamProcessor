@@ -8,8 +8,10 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
 
     [TestClass]
+    [ExcludeFromCodeCoverage]
     public class HomeControllerTests
     {
         private Mock<ILogger<HomeController>> _loggerMock;

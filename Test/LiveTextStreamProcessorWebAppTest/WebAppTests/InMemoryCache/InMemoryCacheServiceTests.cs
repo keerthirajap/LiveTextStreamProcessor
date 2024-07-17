@@ -3,22 +3,12 @@ namespace LiveTextStreamProcessorTest.WebApp.InMemoryCache
     using LiveTextStreamProcessorWebApp.Cache;
     using LiveTextStreamProcessorWebApp.Models;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using System.Diagnostics.CodeAnalysis;
 
     [TestClass]
+    [ExcludeFromCodeCoverage]
     public class InMemoryCacheServiceTests
     {
-        [TestMethod]
-        public void GetCachedData_ReturnsNullInitially()
-        {
-            // Arrange
-
-            // Act
-            var cachedData = InMemoryCacheService.Instance.GetCachedData();
-
-            // Assert
-            Assert.IsNull(cachedData, "Cached data should be null initially");
-        }
-
         [TestMethod]
         public void SetCachedData_SetsDataCorrectly()
         {

@@ -10,11 +10,13 @@
     using Moq;
     using Newtonsoft.Json;
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
     using System.Text;
     using System.Threading.Tasks;
 
     [TestClass]
+    [ExcludeFromCodeCoverage]
     public class StreamProcessingServiceTests
     {
         private Mock<IHubContext<StreamHub>> _mockHubContext;

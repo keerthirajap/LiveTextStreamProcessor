@@ -12,8 +12,10 @@ namespace LiveTextStreamProcessorTest.WebApp.SignalRHubs
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
     using System.Reflection;
+    using System.Diagnostics.CodeAnalysis;
 
     [TestClass]
+    [ExcludeFromCodeCoverage]
     public class StreamHubTests
     {
         private Mock<ILogger<StreamHub>> _loggerMock;
