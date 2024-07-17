@@ -12,7 +12,6 @@
     public class StreamProcessingService
     {
         private readonly IHubContext<StreamHub> _hubContext;
-        private readonly Booster.CodingTest.Library.WordStream _wordStream;
         private readonly ILogger<StreamProcessingService> _logger;
         private readonly IWordStreamReaderService _wordStreamReaderService;
 
@@ -21,7 +20,6 @@
 
         public StreamProcessingService(IHubContext<StreamHub> hubContext, ILogger<StreamProcessingService> logger, IWordStreamReaderService wordStreamReaderService)
         {
-            _wordStream = new Booster.CodingTest.Library.WordStream(); // Initialize WordStream
             _hubContext = hubContext;
             _logger = logger;
             _wordStreamReaderService = wordStreamReaderService;

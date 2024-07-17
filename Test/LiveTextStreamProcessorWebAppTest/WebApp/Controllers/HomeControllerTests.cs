@@ -1,14 +1,14 @@
-﻿using LiveTextStreamProcessorWebApp.Controllers;
-using LiveTextStreamProcessorWebApp.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
-using System.Diagnostics;
-
-namespace LiveTextStreamProcessorWebAppTest
+﻿namespace LiveTextStreamProcessorTest.WebApp.Controllers
 {
+    using LiveTextStreamProcessorWebApp.Controllers;
+    using LiveTextStreamProcessorWebApp.Models;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Moq;
+    using System.Diagnostics;
+
     [TestClass]
     public class HomeControllerTests
     {

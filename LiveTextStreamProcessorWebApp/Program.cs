@@ -8,7 +8,9 @@ namespace LiveTextStreamProcessorWebApp
     using LiveTextStreamProcessorWebApp.Services;
     using NLog;
     using NLog.Web;
+    using System.Diagnostics.CodeAnalysis;
 
+    [ExcludeFromCodeCoverage]
     public class Program
     {
         public static void Main(string[] args)
@@ -23,8 +25,8 @@ namespace LiveTextStreamProcessorWebApp
                 // Add services to the container.
                 builder.Services.AddControllersWithViews(options =>
                 {
-                    options.Filters.Add(typeof(LogPageRequestAttribute)); // Add globally
-                    options.Filters.Add(typeof(LogExceptionAttribute)); // Add globally
+                    options.Filters.Add(typeof(LogPageRequestAttribute));
+                    options.Filters.Add(typeof(LogExceptionAttribute));
                 });
 
                 builder.Services.AddSignalR();

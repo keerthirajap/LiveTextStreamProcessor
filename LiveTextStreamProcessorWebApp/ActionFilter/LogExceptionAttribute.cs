@@ -3,7 +3,9 @@
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.Filters;
     using Microsoft.Extensions.Logging;
+    using System.Diagnostics.CodeAnalysis;
 
+    [ExcludeFromCodeCoverage]
     public class LogExceptionAttribute : ExceptionFilterAttribute
     {
         private readonly ILogger<LogExceptionAttribute> _logger;

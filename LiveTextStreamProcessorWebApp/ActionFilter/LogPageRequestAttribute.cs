@@ -3,7 +3,9 @@
     using Microsoft.AspNetCore.Mvc.Filters;
     using Microsoft.Extensions.Logging;
     using NLog;
+    using System.Diagnostics.CodeAnalysis;
 
+    [ExcludeFromCodeCoverage]
     public class LogPageRequestAttribute : ActionFilterAttribute
     {
         private readonly ILogger<LogPageRequestAttribute> _logger;

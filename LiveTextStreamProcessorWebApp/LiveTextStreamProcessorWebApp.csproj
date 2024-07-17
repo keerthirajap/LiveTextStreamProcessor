@@ -14,20 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Libraries\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\LiveTextStreamProcessorService\LiveTextStreamProcessorService.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Booster.CodingTest.Library">
-      <HintPath>Libraries\Booster.CodingTest.Library.dll</HintPath>
-    </Reference>
-    <Reference Include="NLipsum.Core">
-      <HintPath>Libraries\NLipsum.Core.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

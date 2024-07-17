@@ -1,9 +1,9 @@
-using LiveTextStreamProcessorWebApp.Cache;
-using LiveTextStreamProcessorWebApp.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace LiveTextStreamProcessorWebAppTest
+namespace LiveTextStreamProcessorTest.WebApp.InMemoryCache
 {
+    using LiveTextStreamProcessorWebApp.Cache;
+    using LiveTextStreamProcessorWebApp.Models;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+
     [TestClass]
     public class InMemoryCacheServiceTests
     {
@@ -11,7 +11,6 @@ namespace LiveTextStreamProcessorWebAppTest
         public void GetCachedData_ReturnsNullInitially()
         {
             // Arrange
-            // Assuming no data is initially set
 
             // Act
             var cachedData = InMemoryCacheService.Instance.GetCachedData();
@@ -49,7 +48,5 @@ namespace LiveTextStreamProcessorWebAppTest
             // Assert
             Assert.AreEqual(updatedData, cachedData, "Cached data should be updated correctly");
         }
-
-        // Add additional tests for concurrency, thread safety, etc., if applicable
     }
 }
